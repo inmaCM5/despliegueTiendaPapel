@@ -1,0 +1,50 @@
+version: "2"
+services:
+  www:
+    build: .
+    ports:
+      - "8001:80"
+    volumes:
+      - ./www:/var/www/html/
+    links:
+      - db
+    networks:
+      - default
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: tiendaPapel
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./db:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - UPLOAD_LIMIT=600M
+    ports:
+      - 8181:80
+    volumes:
+      - /sessions
+  symfony:
+    image: docker.io/bitnami/symfony:6.0
+    ports:
+      - '8000:8000'
+    environment:
+      - SYMFONY_DATABASE_HOST=db
+      - SYMFONY_DATABASE_PORT_NUMBER=3306
+      - SYMFONY_DATABASE_USER=exampleuser
+      - SYMFONY_DATABASE_PASSWORD=examplepass
+      - SYMFONY_DATABASE_NAME=tiendapapel
+    volumes:
+      - '.:/app'
+    depends_on:
+      - db
+  mailer:
+    image: schickling/mailcatcher
+    ports:
+      - '5432'
+    depends_on:
+      - db
